@@ -160,23 +160,6 @@ class TransitionState:
     def get_max_duration(self):
         return max(x.duration for x in self._vars)
 
-LEFT, RIGHT = 0, 1
-
-class SubPane:
-    def update_layout(self, rect, cols, rows):
-        self.xpos = rect.x
-        self.ypos = rect.y
-        self.key_width = float(rect.w)/cols
-        self.key_height = float(rect.h)/rows
-        self.cols, self.rows = cols, rows
-
-    def key_rect(self, col, row):
-        return Rect(self.xpos+self.key_width*col, self.ypos+self.key_height*row)
-
-    def find_key(self, x, y):
-        r = min(self.rows, int((x-self.xpos)/self.key_width))
-        h = min(self.cols, int((y-self.ypos)/self.key_height))
-    
 
 class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
 
@@ -222,7 +205,6 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
 
         self._configure_timer = Timer()
 
-        self.pane = [SubPane() for i in range(2)]
 
         #self.set_double_buffered(False)
         self.set_app_paintable(True)
@@ -333,17 +315,7 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
                                 self.get_allocated_width(),
                                 self.get_allocated_height())
         r = self.canvas_rect.deflate(self.get_frame_width())
-        dim = self.keyboard.dimensions()
-        keywidth = 50
-        left_kdb_len = dim.left_cols*keywidth
-        right_kdb_len = dim.left_cols*keywidth
-        lrect = Rect(0,r[1],left_kdb_len,r[3])
-        self.pane[LEFT].update_layout(lrect, dim.left_cols, dim.height)
-        rpos = rect.w-right_kdb_len
-        Rect(rpos,r[1],right_kdb_len,r[3])
-        self.pane[RIGHT].update_layout(rrect, dim.right_cols, dim.height)
-        
-        self.mid_rect = Rect(left_kdb_len,r[1],rpos-left_kdb_len,r[3])
+        self.calculate_layout(r)
 
         # update the aspect ratio of the main window
         self.on_layout_updated()
@@ -811,12 +783,12 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
 
         # hit-test keys
         if hit_handle is None:
-            key = self.get_key_at_location(point)
+            consumed = self.on_ptr_down(sequence)
 
         # enable/disable the drag threshold
         if not hit_handle is None:
             self.enable_drag_protection(False)
-        elif key and key.id == "move":
+        elif False: #key and key.id == "move":
             # Move key needs to support long press;
             # always use the drag threshold.
             self.enable_drag_protection(True)
@@ -825,12 +797,14 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
             self.enable_drag_protection(config.drag_protection)
 
         # handle resizing
-        if key is None and \
+        if not consumed and \
            not config.has_window_decoration() and \
            not config.xid_mode:
             if WindowManipulator.handle_press(self, sequence):
                 return True
 
+        return True
+        # XXX deleteme
         # press the key
         sequence.active_key = key
         if key:
@@ -855,27 +829,23 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
             self._last_click_key = key
             self._last_click_time = sequence.time
 
-        return True
-
     def on_input_sequence_update(self, sequence):
         """ Pointer motion/touch update """
-        if not sequence.primary:  # only drag with the very first sequence
-            return
-
-        point = sequence.point
-        hit_key = None
-
-        # hit-test touch handles first
         hit_handle = None
-        if self.touch_handles.active:
-            hit_handle = self.touch_handles.hit_test(point)
-            self.touch_handles.set_prelight(hit_handle)
+        if sequence.primary:  # only drag with the very first sequence
+
+            point = sequence.point
+
+            # hit-test touch handles first
+            if self.touch_handles.active:
+                hit_handle = self.touch_handles.hit_test(point)
+                self.touch_handles.set_prelight(hit_handle)
 
         # hit-test keys
         if hit_handle is None:
-            hit_key = self.get_key_at_location(point)
+            hit_key = self.on_ptr_move(sequence)
 
-        if sequence.state & BUTTON123_MASK:
+        if sequence.primary and sequence.state & BUTTON123_MASK:
 
             # move/resize
             # fallback=False for faster system resizing (LP: #959035)
@@ -896,16 +866,13 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
 
     def on_input_sequence_end(self, sequence):
         """ Button release/touch end """
-        if sequence.active_key and \
-           not config.scanner.enabled:
-            self.key_up(sequence)
+        hit_key = self.on_ptr_up(sequence)
 
         self.stop_drag()
         self.stop_long_press()
 
         # reset cursor when there was no cursor motion
         point = sequence.point
-        hit_key = self.get_key_at_location(point)
         self.do_set_cursor_at(point, hit_key)
 
         # reset touch handles
@@ -1046,35 +1013,12 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         #FIXME: actually draw here
         clip_rect = Rect.from_extents(*context.clip_extents())
         draw_rect = clip_rect.inflate(5,5)
-        for side,pane in enumerate(self.panes):
-            if draw_rect.intersects(pane.rect):
-                self.draw_pane(side,context,draw_rect)
-
+        self.draw_keyboard(context, draw_rect)
         # draw touch handles (enlarged move and resize handles)
         if self.touch_handles.active:
             corner_radius = config.CORNER_RADIUS if decorated else 0
             self.touch_handles.set_corner_radius(corner_radius)
             self.touch_handles.draw(context)
-
-    def draw_pane(self, side, context, draw_rect):
-        p = self.pane[side]
-        r = draw_rect
-        xmin, ymin = p.find_key(r.x,r.y)
-        xmax, ymax = p.find_key(r.x+r.w,r.y+r.h)
-        for x in range(xmin,xmax+1):
-            for y in range(ymin,ymax+1):
-                self.draw_key(side,x,y,context)
-
-    def draw_key(self, side, c, r, context):
-        rect = self.pane[side].key_rect(c,r)
-        roundness = config.theme_settings.roundrect_radius * radius_scale
-        if roundness:
-            roundrect_curve(context, rect, roundness)
-        else:
-            context.rectangle(*rect)
-        fill = [1.0,0,0,0.5]
-        context.set_source_rgba(*fill)
-        context.fill()
 
     def emit_quit_onboard(self, data=None):
         _logger.debug("Entered emit_quit_onboard")

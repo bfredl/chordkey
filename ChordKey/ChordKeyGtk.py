@@ -21,8 +21,8 @@ from gi.repository import GLib, Gdk, Gtk
 import virtkey
 
 from ChordKey.KbdWindow       import KbdWindow, KbdPlugWindow
-from ChordKey.Keyboard        import Keyboard
-from ChordKey.KeyboardWidget  import KeyboardWidget
+from ChordKey.Keyboard        import ChordKeyboard
+from ChordKey.ChordKeyboardWidget  import ChordKeyboardWidget
 from ChordKey.Indicator       import Indicator
 #from ChordKey.LayoutLoaderSVG import LayoutLoaderSVG
 from ChordKey.Appearance      import ColorScheme
@@ -102,12 +102,12 @@ class ChordKeyGtk(object):
         self._osk_util.set_unix_signal_handler(signal.SIGINT, self.on_sigint)
 
         # Create the central keyboard model
-        self.keyboard = Keyboard()
+        self.keyboard = ChordKeyboard()
         
         # Create the initial keyboard widget
         # Care for toolkit independence only once there is another
         # supported one besides GTK.
-        self.keyboard_widget = KeyboardWidget(self.keyboard)
+        self.keyboard_widget = ChordKeyboardWidget(self.keyboard)
 
         icp = IconPalette()
         icp.set_layout_view(self.keyboard_widget)
