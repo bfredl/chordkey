@@ -56,6 +56,8 @@ class ChordKeyboard:
         self._key_synth_virtkey = None
         self._key_synth_atspi = None
 
+        self.color_scheme = None # FIXME: not here!!!
+
         self.reset()
 
     def reset(self):

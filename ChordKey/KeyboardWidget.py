@@ -19,7 +19,7 @@ from ChordKey.KeyGtk        import Key, RectKey
 from ChordKey.KeyCommon     import LOD
 from ChordKey               import KeyCommon
 from ChordKey.TouchHandles  import TouchHandles
-#from ChordKey.AtspiAutoShow import AtspiAutoShow
+from ChordKey.AtspiAutoShow import AtspiAutoShow
 
 ### Logging ###
 import logging
@@ -186,8 +186,8 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
 
 
         self.inactivity_timer = InactivityTimer(self)
-        #self.auto_show = AtspiAutoShow(self)
-        #self.auto_show.enable(config.is_auto_show_enabled())
+        self.auto_show = AtspiAutoShow(self)
+        self.auto_show.enable(config.is_auto_show_enabled())
 
         self.touch_handles = TouchHandles()
         self.touch_handles_hide_timer = Timer()
@@ -1229,6 +1229,9 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         dialog.destroy()
 
         self.keyboard.editing_snippet = False
+
+    def get_color_scheme(self):
+        return self.keyboard.color_scheme
 
 
 
