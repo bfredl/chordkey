@@ -423,7 +423,11 @@ class TouchInput:
         span = sequence.time - self._gesture_begin_time
         return span < self.GESTURE_DETECTION_SPAN
 
+    #FIXME later
+    #tap Gestures should not swallow sequences
+    #Drag gestures should send cancel events
     def _gesture_sequence_begin(self, sequence):
+        return True
         if self._num_tap_sequences == 0:
             self._gesture = NO_GESTURE
             self._gesture_detected = False
@@ -438,6 +442,7 @@ class TouchInput:
         self._num_tap_sequences += 1
 
     def _gesture_sequence_update(self, sequence):
+        return True
         if self._gesture_detected and \
            sequence.state & BUTTON123_MASK and \
            self._gesture == NO_GESTURE:
@@ -454,6 +459,7 @@ class TouchInput:
         return True
 
     def _gesture_sequence_end(self, sequence):
+        return True
         if len(self._input_sequences) == 1: # last sequence of the gesture?
             if self._gesture_detected:
                 gesture = self._gesture

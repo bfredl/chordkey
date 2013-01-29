@@ -36,6 +36,9 @@ config = Config()
 
 LEFT, RIGHT = 0, 1
 
+#FIXME conf, single or multitouch?
+single_mode = False
+
 class SubPane:
     def update_layout(self, rect, cols, rows):
         self.rect = rect
@@ -59,11 +62,12 @@ class ChordKeyboardWidget(KeyboardWidget):
         self.panes = [SubPane() for i in range(2)]
         self.keyboard = keyboard
         self.active_pointers = set()
+        self.waiting = []
 
     def calculate_layout(self, rect):
         dim = self.keyboard.dimensions()
         r = rect
-        keywidth = 50
+        keywidth = 75
         left_kdb_len = dim.left_cols*keywidth
         right_kdb_len = dim.left_cols*keywidth
         lrect = Rect(0,r[1],left_kdb_len,r[3])
@@ -155,9 +159,24 @@ class ChordKeyboardWidget(KeyboardWidget):
             return False
         self.active_pointers.remove(seq)
         if seq.active_key is not None:
+            k = seq.active_key
             self.redraw_key(seq.active_key)
+            self.waiting.append(k)
+        print(self.waiting)
+        if not self.active_pointers:
+            if single_mode:
+                if len(self.waiting) < 2:
+                    return True
+            key_seq = tuple(self.waiting)
+            self.waiting.clear()
+            if key_seq:
+                self.keyboard.invoke_action(key_seq)
+                
+
         return True
 
+    def has_active_sequence(self):
+        return len(self.active_pointers ) > 0
 
                 
 

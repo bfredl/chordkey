@@ -854,7 +854,9 @@ class KbdWindow(KbdWindowBase, WindowRectTracker, Gtk.Window):
 
     def update_position(self):
         home_rect = self.get_home_rect()
+        print("1", home_rect)
         rect = self.get_repositioned_window_rect(home_rect)
+        print("2", rect)
         if rect is None:
             # move back home
             rect = home_rect

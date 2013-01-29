@@ -296,9 +296,9 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         Relatively expensive, don't call this while typing.
         """
         self.update_layout()
-        self.invalidate_font_sizes()
-        self.invalidate_keys()
-        self.invalidate_shadows()
+        #self.invalidate_font_sizes()
+        #self.invalidate_keys()
+        #self.invalidate_shadows()
         #self.invalidate_label_extents()
 
     def update_ui_no_resize(self):
@@ -638,7 +638,9 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         if window:
             window.on_user_positioning_done()
 
-        self.reset_lod()
+        #self.reset_lod() FIXME
+
+
 
     def get_always_visible_rect(self):
         """
@@ -689,10 +691,11 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
            self.canvas_rect.h != self.get_allocated_height():
             self.update_layout()
             self.touch_handles.update_positions(self.canvas_rect)
-            self.invalidate_keys()
-            if self._lod == LOD.FULL:
-                self.invalidate_shadows()
-            self.invalidate_font_sizes()
+            #self.invalidate_keys()
+            #if self._lod == LOD.FULL:
+            #    self.invalidate_shadows()
+            #self.invalidate_font_sizes()
+
 
     def _on_enter_notify(self, widget, event):
         self._update_double_click_time()
@@ -769,9 +772,12 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         point = sequence.point
         key = None
 
-        # hit-test touch handles first
+        # hit-test keys
+        hit_key = self.on_ptr_down(sequence)
+
+        # hit-test touch handles 
         hit_handle = None
-        if self.touch_handles.active:
+        if not hit_key and self.touch_handles.active:
             hit_handle = self.touch_handles.hit_test(point)
             self.touch_handles.set_pressed(hit_handle)
             if not hit_handle is None:
@@ -781,9 +787,6 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
                 # no handle clicked -> hide them now
                 self.show_touch_handles(False)
 
-        # hit-test keys
-        if hit_handle is None:
-            consumed = self.on_ptr_down(sequence)
 
         # enable/disable the drag threshold
         if not hit_handle is None:
@@ -797,7 +800,7 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
             self.enable_drag_protection(config.drag_protection)
 
         # handle resizing
-        if not consumed and \
+        if not hit_key and \
            not config.has_window_decoration() and \
            not config.xid_mode:
             if WindowManipulator.handle_press(self, sequence):
@@ -885,20 +888,24 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
            self.inactivity_timer.is_enabled():
             self.inactivity_timer.begin_transition(False)
 
-    def on_drag_gesture_begin(self, num_touches):
+    def on_drag_esture_begin(self, num_touches):
+        print("draggen", num_touches)
         self.stop_long_press()
+        return False
 
         if num_touches and \
-           not self.is_drag_initiated():
+           not self.is_drag_initiated() and not self.has_active_sequence():
             self.show_touch_handles()
             self.start_move_window()
-        return True
+            return True
+        return False
 
     def on_drag_gesture_end(self, num_touches):
         self.stop_move_window()
         return True
 
     def on_tap_gesture(self, num_touches):
+        print("tappen",num_touches)
         if num_touches == 3:
             self.show_touch_handles()
             return True
@@ -1016,6 +1023,7 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         self.draw_keyboard(context, draw_rect)
         # draw touch handles (enlarged move and resize handles)
         if self.touch_handles.active:
+            decorated = False# FIXME
             corner_radius = config.CORNER_RADIUS if decorated else 0
             self.touch_handles.set_corner_radius(corner_radius)
             self.touch_handles.draw(context)
@@ -1137,13 +1145,13 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         # experimental support for keeping window aspect ratio
         # Currently, in Oneiric, neither lightdm, nor gnome-screen-saver
         # appear to honor these hints.
-        layout = self.get_layout()
+        #layout = self.get_layout()
 
         aspect_ratio = None
         if config.is_keep_aspect_ratio_enabled():
-            log_rect = layout.get_border_rect()
+            #log_rect = layout.get_border_rect()
             aspect_ratio = log_rect.w / float(log_rect.h)
-            aspect_ratio = layout.get_log_aspect_ratio()
+            #aspect_ratio = layout.get_log_aspect_ratio()
 
         if self._aspect_ratio != aspect_ratio:
             window = self.get_kbd_window()
