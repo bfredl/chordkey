@@ -131,9 +131,15 @@ class TouchInput:
         self._num_tap_sequences = 0
         self._gesture_timer = Timer()
 
+        self._order_timer = Timer()
+        self._queued_events = []
+
         self.init_event_handling(
                  config.keyboard.event_handling == EventHandlingEnum.GTK,
                  False)
+
+        self._pytime_start = None
+        self._evtime_start = None
 
     def cleanup(self):
         if self._device_manager:
@@ -314,13 +320,22 @@ class TouchInput:
 
         event_type = event.type
         if event_type == Gdk.EventType.TOUCH_BEGIN:
-            print("DOWN",time.time(),event.get_time())
+            if self._pytime_start == None:
+                self._pytime_start = time.time()
+                self._evtime_start = event.get_time()
+            print("DOWN",time.time()-self._pytime_start,event.get_time()-self._evtime_start)
             evlog.append(event)
             sequence = InputSequence()
             sequence.init_from_touch_event(touch, id)
             if len(self._input_sequences) == 0:
                 sequence.primary = True
+            for ev, qseq in self._queued_events:
+                if qseq.time < event.get_time():
+                    #print("Yielded to queued")
+                    self._input_sequence_end(qseq)
+                    self._queued_events.remove((ev, qseq))
 
+            
             self._input_sequence_begin(sequence)
 
         elif event_type == Gdk.EventType.TOUCH_UPDATE:
@@ -340,12 +355,24 @@ class TouchInput:
             elif event_type == Gdk.EventType.TOUCH_CANCEL:
                 pass
 
-            print("UP",time.time(),event.get_time())
+            print("UP",time.time()-self._pytime_start,event.get_time()-self._evtime_start)
             evlog.append(event)
             sequence = self._input_sequences.get(id)
             if not sequence is None:
                 sequence.time       = event.get_time()
-                self._input_sequence_end(sequence)
+                self._queued_events.append((Gdk.EventType.TOUCH_END,sequence))
+                self._order_timer.start(0.05,self._delayed_release)
+
+    def _delayed_release(self):
+        for ev, seq in self._queued_events:
+            if ev ==  Gdk.EventType.TOUCH_END:
+                print("D:UP",time.time()-self._pytime_start,seq.time-self._evtime_start)
+                self._input_sequence_end(seq)
+            #elif ev ==  Gdk.EventType.TOUCH_BEGIN:
+        self._queued_events.clear()
+        return False
+
+
 
     def _input_sequence_begin(self, sequence):
         """ Button press/touch begin """
