@@ -7,7 +7,8 @@ import sys
 import time
 from math import sin, pi
 
-from gi.repository         import GLib, Gdk, Gtk
+from gi.repository         import GLib, Gdk, Gtk, Pango, PangoCairo
+import cairo
 
 from ChordKey.utils         import Rect, Timer, FadeTimer, roundrect_arc
 from ChordKey.utils         import brighten, roundrect_curve, gradient_line, \
@@ -37,8 +38,16 @@ config = Config()
 LEFT, RIGHT = 0, 1
 
 #FIXME conf, single or multitouch?
-single_mode = False
+import sys
+single_mode = "single" in sys.argv
 
+#DrawState
+STATE_NORMAL = 0
+STATE_HOVER = 1
+STATE_ACTIVATED = 2
+
+PangoUnscale = 1.0 / Pango.SCALE
+print( PangoUnscale)
 class SubPane:
     def update_layout(self, rect, cols, rows):
         self.rect = rect
@@ -63,6 +72,7 @@ class ChordKeyboardWidget(KeyboardWidget):
         self.keyboard = keyboard
         self.active_pointers = set()
         self.waiting = []
+        self._pango_layout = Pango.Layout(context=Gdk.pango_context_get())
 
     def calculate_layout(self, rect):
         dim = self.keyboard.dimensions()
@@ -94,19 +104,41 @@ class ChordKeyboardWidget(KeyboardWidget):
 
     def draw_key(self, side, c, r, context):
         rect = self.panes[side].key_rect(c,r)
+        state = self.get_key_drawstate((side,c,r))
+        label = self.get_key_label((side,c,r))
+
         draw_rect = rect.deflate(3)
         roundness = config.theme_settings.roundrect_radius 
         if roundness:
             roundrect_curve(context, draw_rect, roundness)
         else:
             context.rectangle(*draw_rect)
-        state = self.get_key_state((side,c,r))
-        if state:
-            fill = [0.8,0.1,0.0,0.9]
+        if state == STATE_HOVER:
+            fill = [0.8,0.5,0.0,1.0]
+        elif state == STATE_ACTIVATED:
+            fill = [0.0,0.6,0.2,0.8]
         else:
-            fill = [0.2,0,0.8,0.5]
+            fill = [0.8,0.8,0.8,0.6]
         context.set_source_rgba(*fill)
         context.fill()
+        self.draw_text_center(context, label,rect,10,[0,0,0,1])
+
+
+    def draw_text_center(self, context, text, rect, size, rgba):
+        l = self._pango_layout
+        l.set_text(text, -1)
+        font_description = Pango.FontDescription(config.theme_settings.key_label_font)
+        font_description.set_size(int(size*Pango.SCALE))
+        l.set_font_description(font_description)
+        w, h = l.get_size()   # In Pango units
+        w, h = w*PangoUnscale,h*PangoUnscale # in pixels
+        x = int(rect.x + (rect.w-w)/2.0)
+        y = int(rect.y + (rect.h-h)/2.0)
+        #print(x,y)
+        context.move_to(x, y)
+        context.set_source_rgba(*rgba)
+        PangoCairo.show_layout(context, l)
+
 
     def redraw_key(self, key):
         if key is None:
@@ -114,6 +146,10 @@ class ChordKeyboardWidget(KeyboardWidget):
         side, c, r = key
         rect = self.panes[side].key_rect(c,r)
         self.queue_draw_area(*rect)
+
+    def redraw_all(self):
+        for p in self.panes:
+            self.queue_draw_area(*p.rect)
 
     def find_key(self, x, y):
         for i,pane in enumerate(self.panes):
@@ -123,11 +159,28 @@ class ChordKeyboardWidget(KeyboardWidget):
         return None
 
     
-    def get_key_state(self, key):
+    def get_key_drawstate(self, key):
         for seq in self.active_pointers:
-            if seq.active_key == key:
-                return True
-        return False
+            if seq.hover_key == key:
+                return STATE_HOVER
+        if key in self.waiting:
+            return STATE_ACTIVATED
+        return STATE_NORMAL
+
+
+    def get_key_label(self, key):
+        seq = list(self.waiting)
+        if not seq and self.active_pointers:
+            p = next(iter(self.active_pointers))
+            if p.hover_key is not None:
+                seq.append(p.hover_key)
+
+        if key not in seq:
+            seq.append(key)
+        label = self.keyboard.get_action_label(seq)
+        if label is None:
+            return ""
+        return label
 
     def on_ptr_down(self, seq):
         p = seq.point
@@ -136,21 +189,23 @@ class ChordKeyboardWidget(KeyboardWidget):
                 self.active_pointers.add(seq)
                 break
         if seq in self.active_pointers:
-            seq.active_key = None
+            seq.hover_key = None
             self.on_ptr_move(seq)
-            if seq.active_key is not None:
-                pass#self.on_key_down(seq.active_key)
+            if seq.hover_key is not None:
+                #self.redraw_all() #uneconomic but does it for now
+                pass#self.on_key_down(seq.hover_key)
             return True
         return False
 
     def on_ptr_move(self, seq):
         if not seq in self.active_pointers:
             return False
-        old_active = seq.active_key
-        seq.active_key = self.find_key(*seq.point)
-        if seq.active_key != old_active:
-            self.redraw_key(old_active)
-            self.redraw_key(seq.active_key)
+        old_hover = seq.hover_key
+        seq.hover_key = self.find_key(*seq.point)
+        if seq.hover_key != old_hover:
+            #self.redraw_key(old_hover)
+            #self.redraw_key(seq.hover_key)
+            self.redraw_all() #uneconomic but does it for now
         return True
 
     
@@ -158,21 +213,28 @@ class ChordKeyboardWidget(KeyboardWidget):
         if not seq in self.active_pointers:
             return False
         self.active_pointers.remove(seq)
-        if seq.active_key is not None:
-            k = seq.active_key
-            self.redraw_key(seq.active_key)
-            self.waiting.append(k)
-        print(self.waiting)
-        if not self.active_pointers:
-            if single_mode:
-                if len(self.waiting) < 2:
-                    return True
-            key_seq = tuple(self.waiting)
+        first_single_press = single_mode and not self.waiting
+        if self.active_pointers or first_single_press:
+            if seq.hover_key is not None:
+                k = seq.hover_key
+                self.waiting.append(k)
+                #print(self.waiting)
+        else: #last seq
+            #print("activated")
+            key_seq = list(self.waiting) 
+            if seq.hover_key not in key_seq:
+                key_seq.append(seq.hover_key)
             self.waiting.clear()
-            if key_seq:
+            # last touch outside keyboard: cancel action
+            if seq.hover_key is not None:
+                print(key_seq)
                 self.keyboard.invoke_action(key_seq)
+            #for key in key_seq:
+            #    self.redraw_key(key)
                 
 
+        #self.redraw_key(seq.hover_key)
+        self.redraw_all()
         return True
 
     def has_active_sequence(self):

@@ -50,6 +50,7 @@ class TouchInputEnum:
         MULTI,
     ) = range(3)
 
+evlog = []
 
 class InputSequence:
     """
@@ -313,6 +314,8 @@ class TouchInput:
 
         event_type = event.type
         if event_type == Gdk.EventType.TOUCH_BEGIN:
+            print("DOWN",time.time(),event.get_time())
+            evlog.append(event)
             sequence = InputSequence()
             sequence.init_from_touch_event(touch, id)
             if len(self._input_sequences) == 0:
@@ -337,6 +340,8 @@ class TouchInput:
             elif event_type == Gdk.EventType.TOUCH_CANCEL:
                 pass
 
+            print("UP",time.time(),event.get_time())
+            evlog.append(event)
             sequence = self._input_sequences.get(id)
             if not sequence is None:
                 sequence.time       = event.get_time()

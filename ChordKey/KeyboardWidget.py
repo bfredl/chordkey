@@ -221,6 +221,8 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         self.connect("configure-event",      self._on_configure_event)
 
         self._update_double_click_time()
+        
+        self.delay_sequence_begin = False # FIXME: later we want gestures
 
         self.show()
 
@@ -586,7 +588,7 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
             self.auto_show.thaw(thaw_time)
 
     def start_click_polling(self):
-        if self.keyboard.has_latched_sticky_keys():
+        if False: # self.keyboard.has_latched_sticky_keys(): FIXME
             self._outside_click_timer.start(0.01, self._on_click_timer)
             self._outside_click_detected = False
             self._outside_click_start_time = time.time()

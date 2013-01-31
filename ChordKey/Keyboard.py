@@ -136,7 +136,7 @@ class ChordKeyboard:
     def get_action(self, key_seq):
         if not self.configured:
             return None
-        return self.mapping.get(key_seq,None)
+        return self.mapping.get(tuple(key_seq),None)
 
     def invoke_action(self, key_seq):
         a = self.get_action(key_seq)
@@ -144,6 +144,13 @@ class ChordKeyboard:
             return a.invoke()
         else:
             return False
+
+    def get_action_label(self, key_seq):
+        a = self.get_action(key_seq)
+        if a is not None:
+            return a.label
+        else:
+            return None
 
     
     def char_action(self,ch):
