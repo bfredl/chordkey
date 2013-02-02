@@ -92,8 +92,9 @@ class TypeAction(Action):
 
 class ChordKeyboard:
     def __init__(self):
-        self.configured = None
-        self.conf_stupid()
+        from ChordKey.testLayout import configure
+        self.mapping = configure(self)
+        self.configured = True
 
         self.waiting = []
 
@@ -156,6 +157,10 @@ class ChordKeyboard:
     def char_action(self,ch):
         a = TypeAction(ch,self,KeyCommon.CHAR_TYPE,ch)
         return a
+
+    def keycode_action(self, code, label):
+        return TypeAction(label,self,KeyCommon.KEYCODE_TYPE,code)
+
 
     def conf_stupid(self):
         self.mapping = {}

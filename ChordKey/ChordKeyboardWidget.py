@@ -121,7 +121,7 @@ class ChordKeyboardWidget(KeyboardWidget):
             fill = [0.8,0.8,0.8,0.6]
         context.set_source_rgba(*fill)
         context.fill()
-        self.draw_text_center(context, label,rect,10,[0,0,0,1])
+        self.draw_text_center(context, label,rect,17,[0,0,0,1])
 
 
     def draw_text_center(self, context, text, rect, size, rgba):
