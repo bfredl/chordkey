@@ -323,7 +323,7 @@ class TouchInput:
             if self._pytime_start == None:
                 self._pytime_start = time.time()
                 self._evtime_start = event.get_time()
-            print("DOWN",time.time()-self._pytime_start,event.get_time()-self._evtime_start)
+            #print("DOWN",time.time()-self._pytime_start,event.get_time()-self._evtime_start)
             evlog.append(event)
             sequence = InputSequence()
             sequence.init_from_touch_event(touch, id)
@@ -355,7 +355,7 @@ class TouchInput:
             elif event_type == Gdk.EventType.TOUCH_CANCEL:
                 pass
 
-            print("UP",time.time()-self._pytime_start,event.get_time()-self._evtime_start)
+            #print("UP",time.time()-self._pytime_start,event.get_time()-self._evtime_start)
             evlog.append(event)
             sequence = self._input_sequences.get(id)
             if not sequence is None:
@@ -366,7 +366,7 @@ class TouchInput:
     def _delayed_release(self):
         for ev, seq in self._queued_events:
             if ev ==  Gdk.EventType.TOUCH_END:
-                print("D:UP",time.time()-self._pytime_start,seq.time-self._evtime_start)
+                #print("D:UP",time.time()-self._pytime_start,seq.time-self._evtime_start)
                 self._input_sequence_end(seq)
             #elif ev ==  Gdk.EventType.TOUCH_BEGIN:
         self._queued_events.clear()

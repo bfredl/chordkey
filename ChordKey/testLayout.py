@@ -1,63 +1,53 @@
-# SPACE,ret,bksl,tab
-# eaoeiu
-# rhtns
-# .,;:
-# dlc
-# 0123456789
-# +=-_/?\|
-# pyfqjkxbmwv
-# ()[]{}<>
-# ~!@#$%^&*
 from itertools import product
-
+from ChordKey.Keyboard import Mods
 def prodrange(*args):
     return product(*[range(a) for a in args])
 
 def configure(kbd):
     kcode = kbd.keycode_action
     chkey = kbd.char_action
-    ret  = kcode(36, '↵')
-    bksp  = kcode(22, '⟻')
+    mod = kbd.mod_action
+    RET  = kcode(36, '↵')
+    BKSP  = kcode(22, '⟻')
     DEL  = kcode(119, 'Del')
-    ins  = kcode(118, 'Ins')
-    tab   = kcode(23, '⇆')
-    home  = kcode(110, 'Home')
-    end   = kcode(115, 'End')
+    INS  = kcode(118, 'Ins')
+    TAB   = kcode(23, '⇆')
+    HOME  = kcode(110, 'Home')
+    END   = kcode(115, 'End')
     LEFT  = kcode(113, '←')
     RIGHT = kcode(114, '→')
     UP    = kcode(111, '↑')
     DOWN  = kcode(116, '↓')
-    esc  = kcode(9, 'Esc')
-    SUPER  = kcode(116, '❖')
-    ctrl  = kcode(116, 'Ctrl')
-    alt  = kcode(116, 'Alt')
-    space = kcode(65, '⸤  ⸥')
-    alfa  = kcode(116, 'Alfa')
-    num  = kcode(116, 'Num')
-    pgup  = kcode(112, 'PgUp')
-    pgdown  = kcode(117, 'PgDn')
+    ESC  = kcode(9, 'Esc')
+    SUPER  = mod(Mods.SUPER, '❖')
+    CTRL  = mod(Mods.CTRL, 'Ctrl')
+    ALT  = mod(Mods.ALT, 'Alt')
+    SPACE = kcode(65, '⸤  ⸥')
+    ALFA  = kcode(116, 'Alfa')
+    NUM  = kcode(116, 'Num')
+    PGUP  = kcode(112, 'PgUp')
+    PGDN  = kcode(117, 'PgDn')
 
     #  left     lower      upper
     #  right   llllluuuuu   llllluuuuu
     lrpairs = ["rhsntuioae","",        
               "[]\=-()',.",'{}?+_<>";:',
               "vwpkgfmdlc","",
-              "0123456789","~!@#$%^&*\|",
-              "`zqxbjyåäö", "´"]
+              "0123456789","|!@#$%^&*\|",
+              "`zqxbjyåäö", "~"]
 
 
-    s_left = [bksp, home, end, esc, alfa,
-                 tab,  LEFT, RIGHT, DEL, num] 
+    s_left = [BKSP, HOME, END, ESC, ALFA,
+                 TAB,  LEFT, RIGHT, DEL, NUM] 
                  
 
-    s_right = [SUPER, alt,  pgup,    UP, ret,
-                  ctrl, ins,   pgdown, DOWN, space] 
+    s_right = [SUPER, ALT,  PGUP,    UP, RET,
+                  CTRL, INS,   PGDN, DOWN, SPACE] 
              
 
     m = {}
     def putpair(lc,lr,rc,rr, a):
         lkey,rkey  = (0,lc,lr), (1,rc,rr)
-        print(lkey, rkey, a.code)
         m[lkey,rkey] = a
         m[rkey,lkey] = a
         

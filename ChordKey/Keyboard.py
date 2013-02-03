@@ -46,6 +46,18 @@ class DockMode:
         TOP,
     ) = range(3)
 
+class Mods:
+    SHIFT = 1
+    CAPS = 2
+    CTRL = 4
+    ALT = 8
+    NUMLK = 15
+    MOD3 = 32
+    SUPER = 64
+    ALTGR = 128
+
+MOD_LATCHED, MOD_LOCKED = range(2)
+    
 # should be treated as "inner classes" of ChordKeyboard 
 class Action:
     def __init__(self,label,invoke=None):
@@ -53,12 +65,17 @@ class Action:
         if invoke is not None:
             self.invoke = invoke
 
+    #abstract invoke(self): 
+    #   return True if typed (should unlatch)
+    #   False if modifier (don't unlatch other mods)
+
 class TypeAction(Action):
-    def __init__(self,label,kbd,key_type,key_code):
+    def __init__(self,label,kbd,key_type,key_code, mods=()):
         Action.__init__(self, label)
         self.keyboard = kbd # FIXME: cleaner?: make synth global
         self.key_type = key_type
         self.code = key_code
+        self.mods = mods
 
     def _send_key_press(self):
         key_synth = self.keyboard._key_synth
@@ -85,10 +102,37 @@ class TypeAction(Action):
             key_synth.release_keycode(self.code);
 
     def invoke(self):
+        for mod in self.mods:
+            key_synth.lock_mod(mod)
         self._send_key_press()
         self._send_key_release()
+        for mod in self.mods:
+            key_synth.unlock_mod(mod)
         return True
-    
+
+# TODO: specify Sticky/latchy/lazyness
+class ModAction(Action):
+    def __init__(self,kbd,label,mod,key_code=None, mode=None):
+        Action.__init__(self, label)
+        self.keyboard = kbd 
+        self.mod = mod
+        self.key_code = key_code
+        self.mode = mode
+
+    def invoke(self):
+        key_synth = self.keyboard._key_synth
+        mods = self.keyboard.mods
+        status = mods.get(self.mod,None)
+        if status is None:
+            key_synth.lock_mod(self.mod)
+            mods[self.mod] = MOD_LATCHED
+        elif status == MOD_LATCHED:
+            mods[self.mod] = MOD_LOCKED
+        elif status == MOD_LOCKED:
+            key_synth.unlock_mod(self.mod)
+            del mods[self.mod]
+        return False # don't consume mods
+        
 
 class ChordKeyboard:
     def __init__(self):
@@ -97,6 +141,7 @@ class ChordKeyboard:
         self.configured = True
 
         self.waiting = []
+        self.mods = {}
 
         self._key_synth = None
         self._key_synth_virtkey = None
@@ -142,7 +187,10 @@ class ChordKeyboard:
     def invoke_action(self, key_seq):
         a = self.get_action(key_seq)
         if a is not None:
-            return a.invoke()
+            status = a.invoke()
+            if status:
+                self.unlatch_mods()
+            return True
         else:
             return False
 
@@ -160,6 +208,15 @@ class ChordKeyboard:
 
     def keycode_action(self, code, label):
         return TypeAction(label,self,KeyCommon.KEYCODE_TYPE,code)
+
+    def mod_action(self, mod, label, key_code=None, mode=None):
+        return ModAction(self, label, mod, key_code, mode)
+
+    def unlatch_mods(self):
+        for mod,status in list(self.mods.items()):
+            if status == MOD_LATCHED:
+                del self.mods[mod]
+                self._key_synth.unlock_mod(mod)
 
 
     def conf_stupid(self):
