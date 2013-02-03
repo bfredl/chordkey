@@ -16,8 +16,8 @@ _logger = logging.getLogger("KbdWindow")
 ###############
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 
@@ -512,12 +512,13 @@ class KbdWindow(KbdWindowBase, WindowRectTracker, Gtk.Window):
 
         once = CallOnce(100).enqueue  # call at most once per 100ms
 
-        rect_changed = lambda x: once(self._on_config_rect_changed)
-        config.window.position_notify_add(rect_changed)
-        config.window.size_notify_add(rect_changed)
+        if 0: #FIXME
+            rect_changed = lambda x: once(self._on_config_rect_changed)
+            config.window.position_notify_add(rect_changed)
+            config.window.size_notify_add(rect_changed)
 
-        dock_size_changed = lambda x: once(self._on_config_dock_size_changed)
-        config.window.dock_size_notify_add(dock_size_changed)
+            dock_size_changed = lambda x: once(self._on_config_dock_size_changed)
+            config.window.dock_size_notify_add(dock_size_changed)
 
     def cleanup(self):
         WindowRectTracker.cleanup(self)

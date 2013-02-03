@@ -16,8 +16,8 @@ _logger = logging.getLogger("TouchInput")
 ###############
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 BUTTON123_MASK = Gdk.ModifierType.BUTTON1_MASK | \

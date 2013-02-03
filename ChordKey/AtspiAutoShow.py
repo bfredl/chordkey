@@ -11,8 +11,8 @@ _logger = logging.getLogger("AtspiAutoShow")
 ###############
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 try:
@@ -158,7 +158,7 @@ class AtspiAutoShow(object):
         (LP: 1078602). Do this only for single line text entries to
         still allow clicking longer documents without having onboard show up.
         """
-        if config.auto_show.enabled and \
+        if config.auto_show_enabled and \
            not self._keyboard_widget.is_visible():
 
             if event.source is self._focused_accessible:
@@ -180,7 +180,7 @@ class AtspiAutoShow(object):
         self._on_atspi_focus(event)
 
     def _on_atspi_focus(self, event, focus_received = False):
-        if config.auto_show.enabled:
+        if config.auto_show_enabled:
             accessible = event.source
             focused = bool(focus_received) or bool(event.detail1) # received focus?
 

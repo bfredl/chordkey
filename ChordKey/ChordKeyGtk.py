@@ -32,8 +32,8 @@ from ChordKey.utils           import show_confirmation_dialog, CallOnce, Process
 import ChordKey.osk as osk
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 import ChordKey.KeyCommon
@@ -119,10 +119,6 @@ class ChordKeyGtk(object):
 
         self._window.application = self
         config.main_window = self._window # need this to access screen properties
-
-        # load the initial layout
-        _logger.info("Loading initial layout")
-        self.reload_layout()
 
         # Handle command line options x, y, size after window creation
         # because the rotation code needs the window's screen.
@@ -485,9 +481,6 @@ class ChordKeyGtk(object):
             instance.disconnect(handler_id)
 
         if self.keyboard:
-            if self.keyboard.scanner:
-                self.keyboard.scanner.finalize()
-                self.keyboard.scanner = None
             self.keyboard.cleanup()
 
         self.status_icon.set_keyboard_window(None)

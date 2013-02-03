@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 """
 KeyCommon hosts the abstract classes for the various types of Keys.
-UI-specific keys should be defined in KeyGtk or KeyKDE files.
 """
 
 from __future__ import division, print_function, unicode_literals
@@ -15,8 +14,8 @@ _logger = logging.getLogger("KeyCommon")
 ###############
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 (

@@ -28,6 +28,7 @@ def configure(kbd):
     PGUP  = kcode(112, 'PgUp')
     PGDN  = kcode(117, 'PgDn')
 
+    HIDE = kbd.hide_action("[x]")
     #  left     lower      upper
     #  right   llllluuuuu   llllluuuuu
     lrpairs = ["rhsntuioae","",        
@@ -37,7 +38,7 @@ def configure(kbd):
               "`zqxbjyåäö", "~"]
 
 
-    s_left = [BKSP, HOME, END, ESC, ALFA,
+    s_left = [BKSP, HOME, END, ESC, HIDE,
                  TAB,  LEFT, RIGHT, DEL, NUM] 
                  
 

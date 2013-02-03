@@ -33,7 +33,6 @@ from ChordKey.WindowUtils import WindowManipulator, WindowRectTracker, \
                                 Orientation, set_unity_property, \
                                 DwellProgress
 from ChordKey.TouchInput  import InputSequence, POINTER_SEQUENCE
-from ChordKey.KeyGtk      import RectKey
 
 ### Logging ###
 import logging
@@ -41,8 +40,8 @@ _logger = logging.getLogger("IconPalette")
 ###############
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 
@@ -127,10 +126,11 @@ class IconPalette(Gtk.Window, WindowRectTracker, WindowManipulator):
 
         once = CallOnce(100).enqueue  # call at most once per 100ms
         rect_changed = lambda x: once(self._on_config_rect_changed)
-        config.icp.position_notify_add(rect_changed)
-        config.icp.size_notify_add(rect_changed)
+        if 0: #FIXME 
+            config.icp_position_notify_add(rect_changed)
+            config.icp_size_notify_add(rect_changed)
 
-        config.icp.resize_handles_notify_add(lambda x: self.update_resize_handles())
+            config.icp_resize_handles_notify_add(lambda x: self.update_resize_handles())
 
         self.update_sticky_state()
         self.update_resize_handles()
@@ -205,7 +205,7 @@ class IconPalette(Gtk.Window, WindowRectTracker, WindowManipulator):
 
     def update_resize_handles(self):
         """ Tell WindowManipulator about the active resize handles """
-        self.set_drag_handles(config.icp.resize_handles)
+        self.set_drag_handles(config.icp_resize_handles)
 
     def get_drag_threshold(self):
         """ Overload for WindowManipulator """
@@ -312,25 +312,21 @@ class IconPalette(Gtk.Window, WindowRectTracker, WindowManipulator):
             cr.paint()
 
         # draw themed icon
-        self._draw_themed_icon(cr, rect, color_scheme)
+        #self._draw_themed_icon(cr, rect, color_scheme)
+        # FIXME
 
         # draw dwell progress
         rgba = [0.8, 0.0, 0.0, 0.5]
         bg_rgba = [0.1, 0.1, 0.1, 0.5]
         if color_scheme:
-            key  = RectKey("icon0") # take dwell color from the first icon "key"
-            rgba = color_scheme.get_key_rgba(key, "dwell-progress")
-            rgba[3] = min(0.75, rgba[3]) # more transparency
-
-            key  = RectKey("icon1")
-            bg_rgba = color_scheme.get_key_rgba(key, "fill")
-            bg_rgba[3] = min(0.75, rgba[3]) # more transparency
+            pass #FIXME
 
         dwell_rect = rect.grow(0.5)
         self._dwell_progress.draw(cr, dwell_rect, rgba, bg_rgba)
 
         return True
 
+    #FIXME
     def _draw_themed_icon(self, cr, icon_rect, color_scheme):
         """ draw themed icon """
         keys = [RectKey("icon" + str(i)) for i in range(4)]
@@ -422,9 +418,9 @@ class IconPalette(Gtk.Window, WindowRectTracker, WindowManipulator):
         Overload for WindowRectTracker.
         """
         if orientation == Orientation.LANDSCAPE:
-            co = config.icp.landscape
+            co = config.icp_landscape
         else:
-            co = config.icp.portrait
+            co = config.icp_portrait
         rect = Rect(co.x, co.y, co.width, co.height)
         return rect
 
@@ -435,9 +431,9 @@ class IconPalette(Gtk.Window, WindowRectTracker, WindowManipulator):
         """
         # There are separate rects for normal and rotated screen (tablets).
         if orientation == Orientation.LANDSCAPE:
-            co = config.icp.landscape
+            co = config.icp_landscape
         else:
-            co = config.icp.portrait
+            co = config.icp_portrait
 
         co.settings.delay()
         co.x, co.y, co.width, co.height = rect

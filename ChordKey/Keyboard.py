@@ -7,11 +7,8 @@ import gc
 
 from gi.repository import GObject, Gtk, Gdk, Atspi
 
-#from ChordKey.KeyGtk       import *
 from ChordKey              import KeyCommon
-#from ChordKey.KeyCommon    import StickyBehavior
 from ChordKey.MouseControl import MouseController
-#from ChordKey.Scanner      import Scanner
 from ChordKey.utils        import Timer, Modifiers, parse_key_combination
 #from ChordKey.canonical_equivalents import *
 from ChordKey.KeySynth import KeySynthAtspi, KeySynthVirtkey
@@ -22,8 +19,8 @@ except DeprecationWarning:
     pass
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 ### Logging ###
@@ -65,7 +62,7 @@ class Action:
         if invoke is not None:
             self.invoke = invoke
 
-    #abstract invoke(self): 
+    #abstract invoke(self, view): 
     #   return True if typed (should unlatch)
     #   False if modifier (don't unlatch other mods)
 
@@ -119,7 +116,7 @@ class ModAction(Action):
         self.key_code = key_code
         self.mode = mode
 
-    def invoke(self):
+    def invoke(self, view):
         key_synth = self.keyboard._key_synth
         mods = self.keyboard.mods
         status = mods.get(self.mod,None)
@@ -184,10 +181,10 @@ class ChordKeyboard:
             return None
         return self.mapping.get(tuple(key_seq),None)
 
-    def invoke_action(self, key_seq):
+    def invoke_action(self, key_seq,view=None):
         a = self.get_action(key_seq)
         if a is not None:
-            status = a.invoke()
+            status = a.invoke(view)
             if status:
                 self.unlatch_mods()
             return True
@@ -212,6 +209,9 @@ class ChordKeyboard:
     def mod_action(self, mod, label, key_code=None, mode=None):
         return ModAction(self, label, mod, key_code, mode)
 
+    def hide_action(self,label):
+        return Action(label, invoke=lambda v: v.set_visible(False))
+
     def unlatch_mods(self):
         for mod,status in list(self.mods.items()):
             if status == MOD_LATCHED:
@@ -234,6 +234,7 @@ class ChordKeyboard:
         #    self.mapping[(0,c1,r1),(1,c2,r2)] = self.char_action(chr(c))
         self.configured = True
 
+    
 
 
 

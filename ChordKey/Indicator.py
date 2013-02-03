@@ -14,8 +14,8 @@ _logger = logging.getLogger("Indicator")
 ###############
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 
@@ -73,13 +73,13 @@ class Indicator(GObject.GObject):
             Indicator._toggle_keyboard_window_state, self)
         self._menu.append(show_item)
 
-        if not config.lockdown.disable_preferences:
+        if True: #not config.lockdown.disable_preferences:
             settings_item = Gtk.ImageMenuItem.new_with_label(Gtk.STOCK_PREFERENCES)
             settings_item.set_use_stock(True)
             settings_item.connect("activate", self._on_settings_clicked)
             self._menu.append(settings_item)
 
-        if not config.lockdown.disable_quit:
+        if True: #not config.lockdown.disable_quit:
             quit_item = Gtk.ImageMenuItem.new_with_label(Gtk.STOCK_QUIT)
             quit_item.set_use_stock(True)
             quit_item.connect("activate", self._emit_quit_onboard)

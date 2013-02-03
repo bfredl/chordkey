@@ -26,8 +26,8 @@ from ChordKey.utils       import hexstring_to_float, brighten, toprettyxml, \
 import ChordKey.utils as utils
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 class Theme:

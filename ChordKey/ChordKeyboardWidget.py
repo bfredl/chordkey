@@ -19,7 +19,6 @@ from ChordKey.WindowUtils   import WindowManipulator, Handle, DockingEdge, \
 from ChordKey.TouchInput    import TouchInput, InputSequence
 from ChordKey.Keyboard      import EventType
 from ChordKey.KeyboardWidget import KeyboardWidget
-from ChordKey.KeyGtk        import Key, RectKey
 from ChordKey.KeyCommon     import LOD
 from ChordKey               import KeyCommon
 from ChordKey.TouchHandles  import TouchHandles
@@ -31,8 +30,8 @@ _logger = logging.getLogger("KeyboardWidget")
 ###############
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 LEFT, RIGHT = 0, 1
@@ -228,7 +227,7 @@ class ChordKeyboardWidget(KeyboardWidget):
             # last touch outside keyboard: cancel action
             if seq.hover_key is not None:
                 print(key_seq)
-                self.keyboard.invoke_action(key_seq)
+                self.keyboard.invoke_action(key_seq,self)
             #for key in key_seq:
             #    self.redraw_key(key)
                 

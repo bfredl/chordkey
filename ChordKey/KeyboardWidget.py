@@ -15,7 +15,6 @@ from ChordKey.WindowUtils   import WindowManipulator, Handle, DockingEdge, \
                                   get_monitor_rects
 from ChordKey.TouchInput    import TouchInput, InputSequence
 from ChordKey.Keyboard      import EventType
-from ChordKey.KeyGtk        import Key, RectKey
 from ChordKey.KeyCommon     import LOD
 from ChordKey               import KeyCommon
 from ChordKey.TouchHandles  import TouchHandles
@@ -27,8 +26,8 @@ _logger = logging.getLogger("KeyboardWidget")
 ###############
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 ########################
 
 try:
@@ -1176,7 +1175,6 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         _logger.info("Refreshing pango layout, new font dpi setting is '{}'" \
                 .format(Gtk.Settings.get_default().get_property("gtk-xft-dpi")))
 
-        Key.reset_pango_layout()
         self.invalidate_label_extents()
         self.keyboard.update_ui()
 

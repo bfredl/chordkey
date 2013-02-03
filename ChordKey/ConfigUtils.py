@@ -375,52 +375,6 @@ class ConfigObject(object):
                                                    system_filename_func)
 
     @staticmethod
-    def _get_user_sys_filename(filename, description, \
-                               final_fallback = None,
-                               user_filename_func = None,
-                               system_filename_func = None):
-        """
-        Checks a filenames validity and if necessary expands it to a
-        fully qualified path pointing to either the user or system directory.
-        User directory has precedence over the system one.
-        """
-
-        filepath = filename
-        if filename and not os.path.exists(filename):
-            # assume filename is just a basename instead of a full file path
-            _logger.debug(_format("{description} '{filename}' not found yet, "
-                                  "retrying in default paths", \
-                                  description=description, filename=filename))
-
-            if user_filename_func:
-                filepath = user_filename_func(filename)
-                if not os.path.exists(filepath):
-                    filepath = ""
-
-            if  not filepath and system_filename_func:
-                filepath = system_filename_func(filename)
-                if not os.path.exists(filepath):
-                    filepath = ""
-
-            if not filepath:
-                _logger.info(_format("unable to locate '{filename}', "
-                                     "loading default {description} instead",
-                                     description=description,
-                                     filename=filename))
-        if not filepath and not final_fallback is None:
-            filepath = final_fallback
-
-        if not os.path.exists(filepath):
-            _logger.error(_format("failed to find {description} '{filename}'",
-                                  description=description, filename=filename))
-            filepath = ""
-        else:
-            _logger.debug(_format("{description} '{filepath}' found.",
-                                  description=description, filepath=filepath))
-
-        return filepath
-
-    @staticmethod
     def get_unpacked_string_list(gskey, type_spec):
         """ Store dictionary in a gsettings list key """
         _list = gskey.settings.get_strv(gskey.key)

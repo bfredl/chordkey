@@ -109,7 +109,7 @@ class ClickMapper(MouseController):
         self._exclusion_rects = rects
 
 
-class Mousetweaks(ConfigObject, MouseController):
+class Mousetweaks(MouseController):
     """ Mousetweaks settings, D-bus control and signal handling """
 
     CLICK_TYPE_RIGHT  = 0
@@ -129,7 +129,6 @@ class Mousetweaks(ConfigObject, MouseController):
         if not "dbus" in globals():
             raise ImportError("python-dbus unavailable")
 
-        ConfigObject.__init__(self)
         MouseController.__init__(self)
 
         self.launcher = DelayedLauncher()
@@ -137,7 +136,6 @@ class Mousetweaks(ConfigObject, MouseController):
 
         # Check if mousetweaks' schema is installed.
         # Raises SchemaError if it isn't.
-        self.mousetweaks = ConfigObject(None, self.MOUSETWEAKS_SCHEMA_ID)
 
         # connect to session bus
         self._bus = dbus.SessionBus()
@@ -150,16 +148,13 @@ class Mousetweaks(ConfigObject, MouseController):
         result = proxy.NameHasOwner(self.MT_DBUS_NAME, dbus_interface=dbus.BUS_DAEMON_IFACE)
         self._set_connection(bool(result))
 
-    def _init_keys(self):
+    def init_defaults(self):
         """ Create gsettings key descriptions """
 
-        self.schema = self.MOUSE_A11Y_SCHEMA_ID
-        self.sysdef_section = None
-
-        self.add_key("dwell-click-enabled", False)
-        self.add_key("dwell-time", 1.2)
-        self.add_key("dwell-threshold", 10)
-        self.add_key("click-type-window-visible", False)
+        self.dwell_click_enabled = False
+        self.dwell_time = 1.2
+        self.dwell_threshold = 10
+        self.click_type_window_visible = False
 
     def on_properties_initialized(self):
         ConfigObject.on_properties_initialized(self)

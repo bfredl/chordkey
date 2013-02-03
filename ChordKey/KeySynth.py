@@ -7,7 +7,6 @@ import gc
 
 from gi.repository import GObject, Gtk, Gdk, Atspi
 
-#from ChordKey.KeyGtk       import *
 #from ChordKey              import KeyCommon
 #from ChordKey.KeyCommon    import StickyBehavior
 from ChordKey.MouseControl import MouseController
@@ -21,8 +20,8 @@ except DeprecationWarning:
     pass
 
 ### Config Singleton ###
-from ChordKey.Config import Config
-config = Config()
+from ChordKey.Config import get_config
+config = get_config()
 class KeySynthVirtkey:
     """ Synthesize key strokes with python-virtkey """
 
