@@ -156,7 +156,7 @@ class IconPalette(Gtk.Window, WindowRectTracker, WindowManipulator):
 
     def on_drag_done(self):
         self.update_window_rect()
-        self.start_save_position_timer()
+        #self.start_save_position_timer()
         self._no_more_dwelling = True
 
     def _on_realize_event(self, user_data):
@@ -240,8 +240,7 @@ class IconPalette(Gtk.Window, WindowRectTracker, WindowManipulator):
             if not self.is_drag_initiated() and \
                not self._is_dwelling() and \
                not self._no_more_dwelling and \
-               not config.is_hover_click_active() and \
-               not config.lockdown.disable_dwell_activation:
+               not config.is_hover_click_active(): 
                 self._start_dwelling()
         else:
             self._stop_dwelling()  # allow resizing in peace
@@ -291,7 +290,7 @@ class IconPalette(Gtk.Window, WindowRectTracker, WindowManipulator):
         cr.restore()
 
         # draw background color
-        background_rgba = list(color_scheme.get_icon_rgba("background"))
+        background_rgba = [0.0,0.0,0.7,0.8] #list(color_scheme.get_icon_rgba("background"))
 
         if Gdk.Screen.get_default().is_composited():
             background_rgba[3] *= 0.75
@@ -303,7 +302,7 @@ class IconPalette(Gtk.Window, WindowRectTracker, WindowManipulator):
             cr.fill()
 
             # decoration frame
-            line_rect = rect.deflate(2)
+            line_rect = rect.deflate(1)
             cr.set_line_width(2)
             roundrect_arc(cr, line_rect, corner_radius)
             cr.stroke()

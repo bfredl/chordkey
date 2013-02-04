@@ -169,7 +169,7 @@ class ChordKeyGtk(object):
         update_inactive_transparency = \
                               lambda x: once(self.keyboard_widget.update_inactive_transparency)
 
-        if False:
+        if 0: #FIXME
             # general
             config.auto_show.enabled_notify_add(lambda x: \
                                         self.keyboard_widget.update_auto_show())
@@ -229,8 +229,9 @@ class ChordKeyGtk(object):
                         lambda x: self.do_quit_onboard())
 
         # Callbacks to use when icp or status icon is toggled
-        config.show_status_icon_notify_add(self.show_hide_status_icon)
-        config.icp.in_use_notify_add(self.cb_icp_in_use_toggled)
+        if 0: #FIXME
+            config.show_status_icon_notify_add(self.show_hide_status_icon)
+            config.icp.in_use_notify_add(self.cb_icp_in_use_toggled)
 
         self.show_hide_status_icon(config.show_status_icon)
 
@@ -626,10 +627,10 @@ def cb_any_event(event, onboard):
             a += [event.window, "0x{:x}".format(event.window.get_xid())]
         print(*a)
 
-    if type == Gdk.EventType.NOTHING:
-        onboard.reload_layout()
+    #if type == Gdk.EventType.NOTHING:
+    #    onboard.reload_layout()
 
-    elif type == Gdk.EventType.SETTING:
+    if type == Gdk.EventType.SETTING:
         if event.setting.name == "gtk-theme-name":
             onboard.on_gtk_theme_changed()
         elif event.setting.name in ["gtk-xft-dpi",

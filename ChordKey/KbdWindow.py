@@ -789,7 +789,7 @@ class KbdWindow(KbdWindowBase, WindowRectTracker, Gtk.Window):
             rect.x, rect.y = self.keyboard_widget.limit_position(rect.x, rect.y)
 
         self.home_rect = rect.copy()
-        self.start_save_position_timer()
+        #self.start_save_position_timer()
 
         # Make transitions aware of the new position,
         # undoubtedly reached by user positioning.
@@ -977,9 +977,9 @@ class KbdWindow(KbdWindowBase, WindowRectTracker, Gtk.Window):
         self._written_window_rects[orientation] = rect.copy()
 
         # write to gsettings and trigger notifications
-        co.settings.delay()
+        #co.settings.delay()
         co.x, co.y, co.width, co.height = rect
-        co.settings.apply()
+        #co.settings.apply() FIXME
 
     def write_docking_size(self, orientation, size):
         co = self.get_orientation_config_object()
@@ -1049,7 +1049,7 @@ class KbdWindow(KbdWindowBase, WindowRectTracker, Gtk.Window):
         self.emit("quit-onboard")
 
     def _on_delete_event(self, event, data=None):
-        if config.lockdown.disable_quit:
+        if False: #config.lockdown.disable_quit:
             if self.keyboard_widget:
                 return True
         else:

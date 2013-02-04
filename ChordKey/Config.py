@@ -271,7 +271,7 @@ class ConfigObj:
                 self.mousetweaks.click_type_window_visible = \
                         self.mousetweaks.old_click_type_window_visible
             else:
-                if self.universal_access.enable_click_type_window_on_exit:
+                if self.enable_click_type_window_on_exit:
                     self.mousetweaks.click_type_window_visible = True
                 else:
                     self.mousetweaks.click_type_window_visible = \
@@ -493,7 +493,7 @@ class ConfigObj:
         Show icon palette when there is no other means to unhide onboard.
         Unhiding by unity launcher isn't available in force-to-top mode.
         """
-        return self.icp.in_use or self.is_icon_palette_last_unhide_option()
+        return self.icp_in_use or self.is_icon_palette_last_unhide_option()
 
     def is_icon_palette_last_unhide_option(self):
         """
@@ -526,7 +526,7 @@ class ConfigObj:
     ####### resize handles #######
     def resize_handles_notify_add(self, callback):
         self.window.resize_handles_notify_add(callback)
-        self.icp.resize_handles_notify_add(callback)
+        self.icp_resize_handles_notify_add(callback)
 
     def get_num_resize_handles(self):
         """ Translate array of handles to simplified NumResizeHandles enum """
@@ -549,7 +549,7 @@ class ConfigObj:
             icp_handles    = [Handle.SOUTH_EAST]
 
         self.window.resize_handles = window_handles
-        self.icp.resize_handles = icp_handles
+        self.icp_resize_handles = icp_handles
 
     @staticmethod
     def _string_to_handles(string):

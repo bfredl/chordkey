@@ -652,14 +652,7 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         if config.is_docking_enabled():
             bounds = self.canvas_rect
         else:
-            keys = self.keyboard.find_keys_from_ids(["move"])
             bounds = None
-            for key in keys:
-                r = key.get_canvas_border_rect()
-                if not bounds:
-                    bounds = r
-                else:
-                    bounds = bounds.union(r)
 
         return bounds
 
@@ -669,14 +662,7 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         in canvas coordinates.
         Overload for WindowManipulator
         """
-        keys = self.keyboard.find_keys_from_ids(["move"])
         bounds = None
-        for key in keys:
-            r = key.get_canvas_border_rect()
-            if not bounds:
-                bounds = r
-            else:
-                bounds = bounds.union(r)
 
         return bounds
 
@@ -952,7 +938,7 @@ class KeyboardWidget(Gtk.DrawingArea, WindowManipulator, TouchInput):
         Show/hide the enlarged resize/move handels.
         Initiates an opacity fade.
         """
-        if show and config.lockdown.disable_touch_handles:
+        if False: #show and config.lockdown.disable_touch_handles:
             return
 
         if show:
