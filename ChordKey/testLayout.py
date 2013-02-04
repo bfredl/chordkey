@@ -58,6 +58,8 @@ def configure(kbd):
             putpair(lcol,1-lrow,rcol,rrow,chkey(ch))
             if ch.isalnum() and lrow == 0:
                 putpair(lcol,lrow,rcol,rrow,chkey(ch.upper()))
+                m[(0,rcol,rrow),(0,lcol,1-rrow)] = chkey(ch, mods=[Mods.CTRL], label = "C-" + ch.upper())
+                m[(1,rcol,rrow),(1,lcol,1-rrow)] = chkey(ch, mods=[Mods.SUPER], label = "❖-" + ch.upper())
     
     for (row,col),left,right in zip(prodrange(2,5),s_left,s_right):
         m[(0,col,row),] = left

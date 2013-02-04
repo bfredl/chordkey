@@ -120,6 +120,8 @@ class ChordKeyGtk(object):
         self._window.application = self
         config.main_window = self._window # need this to access screen properties
 
+        self.load_vk()
+
         # Handle command line options x, y, size after window creation
         # because the rotation code needs the window's screen.
         if not config.xid_mode:
@@ -169,7 +171,7 @@ class ChordKeyGtk(object):
         update_inactive_transparency = \
                               lambda x: once(self.keyboard_widget.update_inactive_transparency)
 
-        if 0: #FIXME
+        if 0:
             # general
             config.auto_show.enabled_notify_add(lambda x: \
                                         self.keyboard_widget.update_auto_show())
@@ -329,7 +331,7 @@ class ChordKeyGtk(object):
 
     # keyboard layout changes
     def cb_keys_changed(self, keymap):
-        self.reload_layout()
+        self.load_vk()
 
     # modifier changes
     def cb_state_changed(self, keymap):
@@ -342,8 +344,7 @@ class ChordKeyGtk(object):
         """
         Timer callback for polling until virtkey becomes valid.
         """
-        if self.get_vk():
-            self.reload_layout(force_update=True)
+        if self.load_vk():
             GLib.source_remove(self.vk_timer)
             self.vk_timer = None
             return False
@@ -425,28 +426,34 @@ class ChordKeyGtk(object):
                              config.theme_settings.color_scheme_filename)
 
         # if there is no X keyboard, poll until it appears (if ever)
-        if not vk and not self.vk_timer:
-            self.vk_timer = GLib.timeout_add_seconds(1, self.cb_vk_timer)
 
     def load_layout(self, layout_filename, color_scheme_filename):
         _logger.info("Loading keyboard layout from " + layout_filename)
         if (color_scheme_filename):
             _logger.info("Loading color scheme from " + color_scheme_filename)
 
-        vk = self.get_vk()
 
         color_scheme = ColorScheme.load(color_scheme_filename) \
                        if color_scheme_filename else None
         #layout = LayoutLoaderSVG().load(vk, layout_filename, color_scheme)
 
-        self.keyboard.cleanup()
-        self.keyboard.init_key_synth(vk)
+
         #self.keyboard.layout = layout
         self.keyboard.color_scheme = color_scheme
         self.keyboard.on_layout_loaded()
 
         if self._window and self._window.icp:
             self._window.icp.queue_draw()
+
+    def load_vk(self):
+        vk = self.get_vk()
+        if vk:
+            self.keyboard.cleanup()
+            self.keyboard.init_key_synth(vk)
+        else:
+            if not self.vk_timer:
+                self.vk_timer = GLib.timeout_add_seconds(1, self.cb_vk_timer)
+
 
     def get_vk(self):
         if not self._vk:

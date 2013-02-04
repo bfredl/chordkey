@@ -98,7 +98,8 @@ class TypeAction(Action):
         elif ktype == KeyCommon.KEYCODE_TYPE:
             key_synth.release_keycode(self.code);
 
-    def invoke(self):
+    def invoke(self, view):
+        key_synth = self.keyboard._key_synth
         for mod in self.mods:
             key_synth.lock_mod(mod)
         self._send_key_press()
@@ -199,8 +200,10 @@ class ChordKeyboard:
             return None
 
     
-    def char_action(self,ch):
-        a = TypeAction(ch,self,KeyCommon.CHAR_TYPE,ch)
+    def char_action(self,ch, mods=(),label=None):
+        if label is None:
+            label = ch
+        a = TypeAction(label,self,KeyCommon.CHAR_TYPE,ch,mods)
         return a
 
     def keycode_action(self, code, label):

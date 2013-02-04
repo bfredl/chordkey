@@ -76,7 +76,7 @@ class ChordKeyboardWidget(KeyboardWidget):
     def calculate_layout(self, rect):
         dim = self.keyboard.dimensions()
         r = rect
-        keywidth = 75
+        keywidth = config.keyboard.key_width
         left_kdb_len = dim.left_cols*keywidth
         right_kdb_len = dim.left_cols*keywidth
         lrect = Rect(0,r[1],left_kdb_len,r[3])
@@ -176,6 +176,7 @@ class ChordKeyboardWidget(KeyboardWidget):
 
         if key not in seq:
             seq.append(key)
+        seq = self.get_context_keyseq(key)
         label = self.keyboard.get_action_label(seq)
         if label is None:
             return ""
@@ -188,8 +189,11 @@ class ChordKeyboardWidget(KeyboardWidget):
                 self.active_pointers.add(seq)
                 break
         if seq in self.active_pointers:
+            # when consumed as modifer -> don't trigger single key action ("dead")
+            seq.is_dead = False 
             seq.hover_key = None
             self.on_ptr_move(seq)
+            seq.start_key = seq.hover_key
             if seq.hover_key is not None:
                 #self.redraw_all() #uneconomic but does it for now
                 pass#self.on_key_down(seq.hover_key)
@@ -212,18 +216,25 @@ class ChordKeyboardWidget(KeyboardWidget):
         if not seq in self.active_pointers:
             return False
         self.active_pointers.remove(seq)
-        first_single_press = single_mode and not self.waiting
-        if self.active_pointers or first_single_press:
+        if seq.is_dead:
+            self.redraw_all()
+            return True
+        # FIXME doesn't preverve order for tri-touch (not currently used...)
+        key_seq = list(self.waiting)+ [p.hover_key for p in self.active_pointers if p is not None]
+        if not key_seq and seq.start_key != seq.hover_key:
+            key_seq = [seq.start_key ]
+        if single_mode and not key_seq:
             if seq.hover_key is not None:
                 k = seq.hover_key
                 self.waiting.append(k)
-                #print(self.waiting)
+                wait = True
         else: #last seq
             #print("activated")
-            key_seq = list(self.waiting) 
             if seq.hover_key not in key_seq:
                 key_seq.append(seq.hover_key)
             self.waiting.clear()
+            for hold_seq in self.active_pointers:
+                hold_seq.is_dead = True# used as modifier, don't trigger single touch
             # last touch outside keyboard: cancel action
             if seq.hover_key is not None:
                 print(key_seq)
@@ -236,8 +247,42 @@ class ChordKeyboardWidget(KeyboardWidget):
         self.redraw_all()
         return True
 
+    def get_context_keyseq(self, key):
+        if self.waiting:
+            keyseq = list(self.waiting)
+            if key not in keyseq:
+                keyseq.append(key)
+            return keyseq
+
+        base_key = key
+        if len(self.active_pointers) == 1:
+            (p,) = self.active_pointers
+            start = p.start_key
+            hover = p.hover_key
+            base_key = start
+            if hover is not None:
+                if hover[0] == start[0] and key[0] != hover[0]:
+                    base_key = hover
+        elif len(self.active_pointers) == 2:
+            #TODO: make active_pointer ordered list and remove last moved if double
+            active = [p.hover_key for p in self.active_pointers if p is not None]
+            if key in active:
+                return active # FIXME: assumes order agnostic
+            base_key = active[0]
+            if len(active) == 2:
+                if active[1][0] != key[0] and active[0][0] == key[0]:
+                    base_key = active[1]
+
+        if key != base_key:
+            return [base_key,key]
+        else:
+            return [key]
+
     def has_active_sequence(self):
         return len(self.active_pointers ) > 0
+
+    def is_hover_pair(self):
+        return False
 
                 
 

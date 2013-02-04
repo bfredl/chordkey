@@ -680,6 +680,7 @@ class ConfigKeyboard:
         self.event_handling = 0 #GTK
         self.long_press_delay = 0.5
         self.touch_input =  2# MultiTouch
+        self.key_width = 60
 
 
 class ConfigWindow:
@@ -702,7 +703,7 @@ class ConfigWindow:
         self.inactive_transparency = 50.0
         self.inactive_transparency_delay = 1.0
         self.resize_handles = DEFAULT_RESIZE_HANDLES
-        self.docking_enabled = False
+        self.docking_enabled = True
         self.docking_edge = DockingEdge.BOTTOM
         self.docking_shrink_workarea = True
 
